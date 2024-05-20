@@ -1,7 +1,7 @@
 import zcript
 from platform import system
 
-print(f"Zcript 1.0 ({system()})")
+print(f"Zcript ({system()})")
 
 while True:
     INPUT = input(">")
