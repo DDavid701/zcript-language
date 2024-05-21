@@ -21,6 +21,9 @@ def tokenize_source_code(source_code):
         "end":         "identifier",
         "func":        "identifier",
         "wait":        "identifier",
+        "loop":        "identifier",
+        "endloop":     "identifier",
+        "breakloop":   "identifier",
     }
     keywords_list = [
                      "use",
@@ -33,6 +36,9 @@ def tokenize_source_code(source_code):
                      "end",
                      "func",
                      "wait",
+                     "loop",
+                     "endloop",
+                     "breakloop",
                      ]
     token_types = [
         "identifier",
@@ -113,14 +119,15 @@ def parse_source_code():
 def compiler(Tokens, source_code):
     global Is_In_IF_statement
     global Is_In_FUNC
+    global Is_In_LOOP
     global imported_standard
     try:
-        key_ = Tokens[1].split("|")
+        key_ = Tokens[0].split("|")
         key_ = key_[0]
     except Exception:
         key_=None
     print(key_)
-    print(Is_In_IF_statement, Is_In_FUNC)
+    print(Is_In_IF_statement, Is_In_FUNC, Is_In_LOOP)
     try:
         if "use" in Tokens[0]:
             library = Tokens[1].split("|")
@@ -169,7 +176,10 @@ def compiler(Tokens, source_code):
                         variable_value = Tokens[3].split("|")
                         variable_value = variable_value[0]
                         if 'after_statement' in Tokens[4]:
-                            if Is_In_IF_statement == True and Is_In_FUNC == False:
+                            if Is_In_IF_statement == True and Is_In_FUNC == True and Is_In_LOOP == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"            {variable_name} {variable_operator} {variable_value}\n")
+                            elif Is_In_IF_statement == True and Is_In_FUNC == False:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"    {variable_name} {variable_operator} {variable_value}\n")
                             elif Is_In_FUNC == True and Is_In_IF_statement == False:
@@ -178,6 +188,13 @@ def compiler(Tokens, source_code):
                             elif Is_In_IF_statement == True and Is_In_FUNC == True:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"        {variable_name} {variable_operator} {variable_value}\n")
+                            elif Is_In_LOOP == True and Is_In_FUNC == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"        {variable_name} {variable_operator} {variable_value}\n")
+                            elif Is_In_LOOP == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"    {variable_name} {variable_operator} {variable_value}\n")
+
                             else:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"{variable_name} {variable_operator} {variable_value}\n")
@@ -199,15 +216,25 @@ def compiler(Tokens, source_code):
                         input_variable_value = Tokens[3].split("|")
                         input_variable_value = input_variable_value[0]
                         if 'after_statement' in Tokens[4]:
-                            if Is_In_IF_statement == True and Is_In_FUNC == False:
+                            if Is_In_IF_statement == True and Is_In_FUNC == True and Is_In_LOOP == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"            {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
+                            elif Is_In_IF_statement == True and Is_In_FUNC == False:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"    {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
+                            elif Is_In_LOOP == True and Is_In_FUNC == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"        {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
                             elif Is_In_FUNC == True and Is_In_IF_statement == False:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"    {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
                             elif Is_In_IF_statement == True and Is_In_FUNC == True:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"        {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
+                            elif Is_In_LOOP == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"    {input_variable_name} {input_variable_operator} input({input_variable_value})\n")
+
                             else:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"{input_variable_name} {input_variable_operator} input({input_variable_value})\n")
@@ -223,15 +250,24 @@ def compiler(Tokens, source_code):
                 print_value = Tokens[1].split("|")
                 print_value = print_value[0]
                 if 'after_statement' in Tokens[2]:
-                    if Is_In_IF_statement == True and Is_In_FUNC == False:
+                    if Is_In_IF_statement == True and Is_In_FUNC == True and Is_In_LOOP == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"            print({print_value})\n")
+                    elif Is_In_IF_statement == True and Is_In_FUNC == False:
                         with open("compiled.py", "a") as file:
                             file.write(f"    print({print_value})\n")
+                    elif Is_In_LOOP == True and Is_In_FUNC == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"        print({print_value})\n")
                     elif Is_In_FUNC == True and Is_In_IF_statement == False:
                         with open("compiled.py", "a") as file:
                             file.write(f"    print({print_value})\n")
                     elif Is_In_IF_statement == True and Is_In_FUNC == True:
                         with open("compiled.py", "a") as file:
                             file.write(f"        print({print_value})\n")
+                    elif Is_In_LOOP == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"    print({print_value})\n")
                     else:
                         with open("compiled.py", "a") as file:
                             file.write(f"print({print_value})\n")
@@ -245,7 +281,10 @@ def compiler(Tokens, source_code):
                 wait_value = Tokens[1].split("|")
                 wait_value = wait_value[0]
                 if 'after_statement' in Tokens[2]:
-                    if Is_In_IF_statement == True and Is_In_FUNC == False:
+                    if Is_In_IF_statement == True and Is_In_FUNC == True and Is_In_LOOP == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"            time.sleep({wait_value})\n")
+                    elif Is_In_IF_statement == True and Is_In_FUNC == False:
                         with open("compiled.py", "a") as file:
                             file.write(f"    time.sleep({wait_value})\n")
                     elif Is_In_FUNC == True and Is_In_IF_statement == False:
@@ -254,6 +293,12 @@ def compiler(Tokens, source_code):
                     elif Is_In_IF_statement == True and Is_In_FUNC == True:
                         with open("compiled.py", "a") as file:
                             file.write(f"        time.sleep({wait_value})\n")
+                    elif Is_In_LOOP == True and Is_In_FUNC == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"        time.sleep({wait_value})\n")
+                    elif Is_In_LOOP == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"    time.sleep({wait_value})\n")
                     else:
                         with open("compiled.py", "a") as file:
                             file.write(f"time.sleep({wait_value})\n")
@@ -262,7 +307,7 @@ def compiler(Tokens, source_code):
             else:
                 print("Error: Invalid Value '" + Tokens[1] + "'")
 
-        elif "end" in Tokens[0]:
+        elif "end" == key_:
             if 'after_statement' in Tokens[1]:
                 if Is_In_IF_statement == True and Is_In_FUNC == False:
                     Is_In_IF_statement = False
@@ -285,7 +330,13 @@ def compiler(Tokens, source_code):
                         elseif_statement_two = elseif_statement_two[0]
                         if 'after_statement' in Tokens[4]:
                             if Is_In_IF_statement == True:
-                                if Is_In_FUNC == True:
+                                if Is_In_FUNC == True and Is_In_LOOP == True:
+                                    with open("compiled.py", "a") as file:
+                                        file.write(f"        elif {elseif_statement_one} {elseif_statement_operator}= {elseif_statement_two}:\n")
+                                elif Is_In_FUNC == True:
+                                    with open("compiled.py", "a") as file:
+                                        file.write(f"    elif {elseif_statement_one} {elseif_statement_operator}= {elseif_statement_two}:\n")
+                                elif Is_In_LOOP == True:
                                     with open("compiled.py", "a") as file:
                                         file.write(f"    elif {elseif_statement_one} {elseif_statement_operator}= {elseif_statement_two}:\n")
                                 else:
@@ -323,7 +374,13 @@ def compiler(Tokens, source_code):
         elif "else" in Tokens[0]:
             if 'after_statement' in Tokens[1]:
                 if Is_In_IF_statement == True:
-                    if Is_In_FUNC == True:
+                    if Is_In_FUNC == True and Is_In_LOOP == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"        else:\n")
+                    elif Is_In_FUNC == True:
+                        with open("compiled.py", "a") as file:
+                            file.write(f"    else:\n")
+                    elif Is_In_LOOP == True:
                         with open("compiled.py", "a") as file:
                             file.write(f"    else:\n")
                     else:
@@ -331,6 +388,43 @@ def compiler(Tokens, source_code):
                             file.write(f"else:\n")
                 else:
                     print(f"Error: 'else' Statement is not in an 'if' Statement!")
+            else:
+                print("Error: Invalid Syntax. No ':'?")
+
+        elif "loop" == key_:
+            if 'after_statement' in Tokens[1]:
+                Is_In_LOOP = True
+                if Is_In_FUNC == True:
+                    with open("compiled.py", "a") as file:
+                        file.write(f"    while True:\n")
+                else:
+                    with open("compiled.py", "a") as file:
+                        file.write("while True:\n")
+            else:
+                print("Error: Invalid Syntax. No ':'?")
+
+        elif "endloop" == key_:
+            if 'after_statement' in Tokens[1]:
+                if Is_In_LOOP == True:
+                    Is_In_LOOP = False
+                else:
+                    print("Error: 'endloop' Statement is not in an 'loop' Statement!")
+            else:
+                print("Error: Invalid Syntax. No ':'?")
+
+        elif "breakloop" == key_:
+            if 'after_statement' in Tokens[1]:
+                if Is_In_FUNC == True and Is_In_LOOP == True:
+                    with open("compiled.py", "a") as file:
+                        file.write(f"            break\n")
+                elif Is_In_FUNC == True and Is_In_LOOP == True:
+                    with open("compiled.py", "a") as file:
+                        file.write(f"        break\n")
+                elif Is_In_LOOP == True:
+                    with open("compiled.py", "a") as file:
+                        file.write(f"    break\n")
+                else:
+                    print("Error: 'breakloop' Statement is not in an 'loop' Statement!")
             else:
                 print("Error: Invalid Syntax. No ':'?")
 
@@ -346,7 +440,13 @@ def compiler(Tokens, source_code):
                         if_statement_two = if_statement_two[0]
                         if 'after_statement' in Tokens[4]:
                             Is_In_IF_statement = True
-                            if Is_In_FUNC == True:
+                            if Is_In_FUNC == True and Is_In_LOOP == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"        if {if_statement_one} {if_statement_operator}= {if_statement_two}:\n")
+                            elif Is_In_FUNC == True:
+                                with open("compiled.py", "a") as file:
+                                    file.write(f"    if {if_statement_one} {if_statement_operator}= {if_statement_two}:\n")
+                            elif Is_In_LOOP == True:
                                 with open("compiled.py", "a") as file:
                                     file.write(f"    if {if_statement_one} {if_statement_operator}= {if_statement_two}:\n")
                             else:
@@ -362,7 +462,7 @@ def compiler(Tokens, source_code):
         else:
             raise Exception
 
-        print(Is_In_IF_statement, Is_In_FUNC)
+        print(Is_In_IF_statement, Is_In_FUNC, Is_In_LOOP)
     except IndexError:
         with open("compiled.py", "a") as file:
             file.write(" \n")
@@ -377,6 +477,7 @@ def interpreter(file):
 if __name__ == '__main__':
     Is_In_IF_statement   = False
     Is_In_FUNC           = False
+    Is_In_LOOP           = False
     imported_standard    = False
     arg1 = sys.argv[1]
     try:
